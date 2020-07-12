@@ -40,7 +40,7 @@ def download(url):
 def parse_author(highwire, url, html):
     # pylint: disable = unused-argument
     if 'author' not in highwire:
-        highwire['author'] = scrape_authors(url, html)
+        return None
     if all(',' in author for author in highwire['author']):
         return ' and '.join(highwire['author'])
     else:
@@ -132,7 +132,7 @@ def create_bibtex_id(bibtex):
 # source-specific processing
 
 
-def scrape_sciencedirect_authors(html):
+def scrape_sciencedirect_author(html):
     authors = []
     soup = BeautifulSoup(html, 'html.parser')
     for tag in soup.find(id='author-group').find_all(class_='author'):
@@ -142,59 +142,80 @@ def scrape_sciencedirect_authors(html):
     return authors
 
 
-def scrape_authors(url, html):
-    parts = urlsplit(url, html)
-    if parts.netloc.endswith('sciencedirect.com'):
-        return scrape_sciencedirect_authors(html)
-    return ''
+# conversion
 
 
-def scrape_highwire(html):
-    info = defaultdict(list)
+def get_domain(url):
+    match = re.search(r'([^.]+\.)*([^.]+)(\.[^.]+)', urlsplit(url).netloc)
+    if not match:
+        raise ValueError(f'unable to determine domain of {url}')
+    return re.sub('[^0-9A-Za-z]', '', match.groups()[-2]).lower()
+
+
+def get_attributes():
+    attrs = set()
+    for name in globals():
+        if name.startswith('parse_'):
+            attrs.add(name.split('_')[1])
+            continue
+        match = re.fullmatch('scrape_(?P<domain>[^_]*)_(?P<attr>[a-z]*)', name)
+        if match:
+            attrs.add(match.group('attr'))
+    return attrs
+
+
+def scrape_highwire(url, html):
+    domain = get_domain(url)
+    functions = globals()
+    highwire = defaultdict(list)
     for match in re.finditer(r'<\s*meta[^>]*>', html):
-        html = match.group(0)
         attrs = {
             match.group(1).lower(): match.group(2)
-            for match in re.finditer('([a-z]+)="([^"]*)"', html)
+            for match in re.finditer('([a-z]+)="([^"]*)"', match.group(0))
         }
         name = attrs.get('name', '')
         if name.startswith('citation_') and name != 'citation_reference':
-            info[name.replace('citation_', '')].append(attrs.get('content', ''))
-    for k, v in info.items():
-        if len(v) == 1:
-            info[k] = v[0]
-    return info
+            highwire[name.replace('citation_', '')].append(attrs.get('content', ''))
+    for attr in get_attributes():
+        if attr not in highwire and f'scrape_{domain}_{attr}' in functions:
+            val = functions[f'scrape_{domain}_{attr}'](html)
+            if val is not None:
+                highwire[attr] = val
+    for attr, val in highwire.items():
+        if len(val) == 1:
+            highwire[attr] = val[0]
+    return highwire
+
+
+def highwire_to_bibtex(highwire, url, html):
+    bibtex = {}
+    functions = globals()
+    for attr in get_attributes():
+        val = None
+        if f'parse_{attr}' in functions:
+            val = functions[f'parse_{attr}'](highwire, url, html)
+        if val is not None:
+            bibtex[attr] = val
+    bibtex['id'] = create_bibtex_id(bibtex)
+    return bibtex
+
+
+def bibtex_to_str(bibtex):
+    lines = []
+    lines.append('@' + bibtex['type'] + ' {' + bibtex['id'] + ',')
+    for attr, val in sorted(bibtex.items()):
+        if attr not in ('type', 'id'):
+            lines.append(f'    {attr} = {{{val}}},')
+    lines.append('}')
+    return '\n'.join(lines)
 
 
 def to_bibtex(url, html=None):
     if html is None:
         html = download(url)
-    info = scrape_highwire(html)
-    bibtex = {}
-    for name, function in globals().items():
-        if not name.startswith('parse_'):
-            continue
-        attr = name.split('_')[1]
-        val = function(info, url, html)
-        if val is not None:
-            bibtex[attr] = val
-    bibtex_id = create_bibtex_id(bibtex)
-    lines = []
-    lines.append(('@' + bibtex['type'] + ' {' + bibtex_id + ',')
-    for k, v in sorted(bibtex.items()):
-        if k != 'type':
-            lines.append(f'    {k} = {{{v}}},')
-    lines.append('}')
-    return '\n'.join(lines)
-
-
-def get_head(html):
-    start = html.find('<head')
-    end = html.find('</head')
-    if start == -1 or end == -1:
-        return None
-    else:
-        return html[start:html.index('>', end) + 1]
+    highwire = scrape_highwire(url, html)
+    bibtex = highwire_to_bibtex(highwire, url, html)
+    return bibtex_to_str(bibtex)
 
 
 # main
