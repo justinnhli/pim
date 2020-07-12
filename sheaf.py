@@ -564,8 +564,8 @@ def do_rewrite(sheaf, args):
 
 
 def build_arg_parser(parser):
-    actions = ['graph', 'index', 'intake', 'suggest', 'vimgrep', 'rewrite']
-    parser.usage = 'test' # FIXME
+    # FIXME parser.usage = ''
+    actions = sorted(name[3:] for name in globals().keys() if name.startswith('do_'))
     parser.add_argument('action', choices=actions, nargs='?', default='vimgrep')
     parser.add_argument('--sheaf-directory', default=SHEAF_PATH, type=Path)
     parser.add_argument('args', nargs='*')

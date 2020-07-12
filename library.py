@@ -147,8 +147,8 @@ def do_add(library, args):
 
 
 def build_arg_parser(parser):
-    actions = ['add']
     # FIXME parser.usage = ''
+    actions = sorted(name[3:] for name in globals().keys() if name.startswith('do_'))
     parser.add_argument('action', choices=actions, nargs='?', default='add')
     parser.add_argument('args', nargs='*')
     parser.set_defaults(function=parse_args)
