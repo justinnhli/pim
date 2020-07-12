@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import re
-from collections import defaultdict
-from pathlib import Path
+from ast import literal_eval
+from collections import defaultdict, namedtuple
+from textwrap import indent, dedent
 from urllib.parse import urlsplit
 
 import requests
@@ -221,21 +222,39 @@ def to_bibtex(url, html=None):
 # main
 
 
-def main():
-    URLS = [
-        'https://arxiv.org/abs/1901.00596',
-        'https://link.springer.com/article/10.1007/s10956-015-9581-5',
-        'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0002756',
-        'https://www.nature.com/articles/s41467-020-15146-7',
-        'http://www.sciencedirect.com/science/article/pii/S0010027716302013',
-    ]
-    for url in URLS:
-        slug = re.sub('[^0-9A-Za-z]', '', url)
-        filepath = Path(__file__).parent / ('cache-' + slug)
-        with filepath.open() as fd:
-            html = get_head(fd.read())
-        print(to_bibtex(url, html))
+def do_test():
+    TestCase = namedtuple('TestCase', 'url, bibtex')
+    with open('bibtex-test-data') as fd:
+        tests = []
+        for url, bibtex in literal_eval(fd.read()):
+            tests.append(TestCase(url, dedent(bibtex).strip()))
+    for url, expected in tests:
+        actual = to_bibtex(url)
+        if actual != expected:
+            print(f'scrape of {url} expected:')
+            print()
+            print(indent(expected, '    '))
+            print()
+            print('but got:')
+            print()
+            print(indent(actual, '    '))
+            print()
+            print(30 * '-')
+
+
+def do_bibtex(*urls):
+    for url in urls:
+        bibtex = to_bibtex(url)
+        print(bibtex)
         print()
+
+
+def main():
+    import sys
+    if sys.argv[1] == 'test':
+        do_test()
+    else:
+        do_bibtex(*sys.argv[1:])
 
 
 if __name__ == '__main__':

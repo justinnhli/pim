@@ -1,0 +1,71 @@
+(
+    (
+        'https://arxiv.org/abs/1901.00596',
+        '''
+        @inproceedings {Wu2019AComprehensiveSurvey,
+            author = {Wu, Zonghan and Pan, Shirui and Chen, Fengwen and Long, Guodong and Zhang, Chengqi and Yu, Philip S.},
+            doi = {10.1109/TNNLS.2020.2978386},
+            title = {A Comprehensive Survey on Graph Neural Networks},
+            year = {2019},
+        }
+        ''',
+    ),
+    (
+        'https://link.springer.com/article/10.1007/s10956-015-9581-5',
+        '''
+        @inproceedings {Weintrop2016DefiningComputationalThinking,
+            author = {Weintrop, David and Beheshti, Elham and Horn, Michael and Orton, Kai and Jona, Kemi and Trouille, Laura and Wilensky, Uri},
+            doi = {10.1007/s10956-015-9581-5},
+            number = {1},
+            pages = {127--147},
+            publisher = {Springer Netherlands},
+            title = {Defining Computational Thinking for Mathematics and Science Classrooms},
+            volume = {25},
+            year = {2016},
+        }
+        ''',
+    ),
+    (
+        'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0002756',
+        '''
+        @inproceedings {Zilli2008TheInfluenceOf,
+            author = {Zilli, Eric A. and Hasselmo, Michael E.},
+            doi = {10.1371/journal.pone.0002756},
+            number = {7},
+            publisher = {Public Library of Science},
+            title = {The Influence of Markov Decision Process Structure on the Possible Strategic Use of Working Memory and Episodic Memory},
+            volume = {3},
+            year = {2008},
+        }
+        ''',
+    ),
+    (
+        'https://www.nature.com/articles/s41467-020-15146-7',
+        '''
+        @inproceedings {Lynn2020AbstractRepresentationsOf,
+            author = {Lynn, Christopher W. and Kahn, Ari E. and Nyema, Nathaniel and Bassett, Danielle S.},
+            doi = {10.1038/s41467-020-15146-7},
+            number = {1},
+            pages = {1--12},
+            publisher = {Nature Publishing Group},
+            title = {Abstract representations of events arise from mental errors in learning and memory},
+            volume = {11},
+            year = {2020},
+        }
+        ''',
+    ),
+    (
+        'http://www.sciencedirect.com/science/article/pii/S0010027716302013',
+        '''
+        @article {Fechner2016StrategiesForMemory,
+            author = {Fechner, Hanna B. and Pachur, Thorsten and Schooler, Lael J. and Mehlhorn, Katja and Battal, Ceren and Volz, Kirsten G. and Borst, Jelmer P.},
+            doi = {10.1016/j.cognition.2016.08.011},
+            pages = {77--99},
+            publisher = {Elsevier},
+            title = {Strategies for memory-based decision making: Modeling behavioral and neural signatures within a cognitive architecture},
+            volume = {157},
+            year = {2016},
+        }
+        ''',
+    ),
+)
