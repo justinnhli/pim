@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
 import re
-import requests
 from collections import defaultdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import requests
 from bs4 import BeautifulSoup
 
 # look for HighWire Press meta-tags
 # see https://scholar.google.com/intl/en-us/scholar/inclusion.html#indexing
+
+# downloading
 
 
 def extract_text(element):
@@ -22,22 +24,17 @@ def extract_text(element):
     return re.sub(r'  \+', ' ', ''.join(text).strip())
 
 
+def download(url):
+    response = requests.get(
+        url,
+        headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'},
+    )
+    if response.status_code != 200:
+        raise IOError(f'Unable to download {url} (status code {response.status_code})')
+    return response.text
 
-def scrape_sciencedirect_authors(html):
-    authors = []
-    soup = BeautifulSoup(html, 'html.parser')
-    for tag in soup.find(id='author-group').find_all(class_='author'):
-        first_name = extract_text(tag.find(class_='given-name'))
-        last_name = extract_text(tag.find(class_='surname'))
-        authors.append(f'{last_name}, {first_name}')
-    return authors
 
-
-def scrape_authors(url, html):
-    parts = urlsplit(url, html)
-    if parts.netloc.endswith('sciencedirect.com'):
-        return scrape_sciencedirect_authors(html)
-    return ''
+# source-agnostic processing
 
 
 def parse_author(highwire, url, html):
@@ -132,6 +129,26 @@ def create_bibtex_id(bibtex):
     return bibtex_id
 
 
+# source-specific processing
+
+
+def scrape_sciencedirect_authors(html):
+    authors = []
+    soup = BeautifulSoup(html, 'html.parser')
+    for tag in soup.find(id='author-group').find_all(class_='author'):
+        first_name = extract_text(tag.find(class_='given-name'))
+        last_name = extract_text(tag.find(class_='surname'))
+        authors.append(f'{last_name}, {first_name}')
+    return authors
+
+
+def scrape_authors(url, html):
+    parts = urlsplit(url, html)
+    if parts.netloc.endswith('sciencedirect.com'):
+        return scrape_sciencedirect_authors(html)
+    return ''
+
+
 def scrape_highwire(html):
     info = defaultdict(list)
     for match in re.finditer(r'<\s*meta[^>]*>', html):
@@ -180,14 +197,7 @@ def get_head(html):
         return html[start:html.index('>', end) + 1]
 
 
-def download(url):
-    response = requests.get(
-        url,
-        headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'},
-    )
-    if response.status_code != 200:
-        raise IOError(f'Unable to download {url} (status code {response.status_code})')
-    return response.text
+# main
 
 
 def main():
