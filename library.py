@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 """A library of research papers."""
 
 import re
+from argparse import ArgumentParser
 from pathlib import Path
 from typing import Any, Optional, Dict
 
@@ -119,3 +121,58 @@ class Library:
                     match = re.fullmatch(' *(?P<attr>[^ =]+) *= *{(?P<val>.+)},', line)
                     assert match, line
                     setattr(paper, match.group('attr'), match.group('val'))
+
+
+def do_add(library, args):
+    '''
+    if single argument:
+        if existing file:
+            if path in library:
+                FIXME
+            if invalid name:
+                FIXME may need to do OCR, find info, etc.
+                rename
+            move to library
+        elif url:
+            print bibtex
+        else:
+            FIXME open? show path? show url?
+    else:
+        if all valid names:
+            FIXME open? show path? show url?
+        else:
+            FIXME search?
+    '''
+    raise NotImplementedError()
+
+
+def build_arg_parser(parser):
+    actions = ['add']
+    # FIXME parser.usage = ''
+    parser.add_argument('action', choices=actions, nargs='?', default='add')
+    parser.add_argument('args', nargs='*')
+    parser.set_defaults(function=parse_args)
+    return parser
+
+
+def parse_args(arg_parser, args):
+    # type: (*str) -> None
+    """Parse CLI arguments."""
+    library = Library()
+    do_functions = globals()
+    if f'do_{args.action}' in do_functions:
+        do_functions[f'do_{args.action}'](library, args)
+    elif hasattr(sheaf, args.action):
+        getattr(sheaf, args.action)(*args.args)
+    else:
+        raise NotImplementedError(args.action)
+
+
+def main():
+    arg_parser = build_arg_parser(ArgumentParser())
+    args = arg_parser.parse_args()
+    args.function(arg_parser, args)
+
+
+if __name__ == '__main__':
+    main()
