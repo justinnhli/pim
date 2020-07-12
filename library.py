@@ -3,12 +3,20 @@
 
 import re
 from argparse import ArgumentParser
+from os.path import getmtime
 from pathlib import Path
 from typing import Any, Optional, Dict
+
+try:
+    from pdfocr import ocr_pdf_file
+    pass
+except ModuleNotFoundError as err:
+    run_with_venv('pim')
 
 
 BIBTEX_PATH = Path('~/pim/library.bib').expanduser().resolve()
 PAPERS_PATH = Path('~/papers').expanduser().resolve()
+OCR_PATH = Path('~/pim/papers').expanduser().resolve()
 REMOTE_HOST = 'justinnhli.com'
 
 
@@ -144,6 +152,16 @@ def do_add(library, args):
             FIXME search?
     '''
     raise NotImplementedError()
+
+
+def do_ocr(library, _):
+    # TODO OCR should not be a top-level action
+    for paper_path in PAPERS_PATH.glob('**/*.pdf'):
+        relative_path = paper_path.relative_to(PAPERS_PATH)
+        ocr_path = OCR_PATH.joinpath(relative_path)
+        if not ocr_path.exists() or getmtime(ocr_path) < getmtime(paper_path):
+            with ocr_path.open('w') as fd:
+                fd.write(ocr_pdf_file(paper_path))
 
 
 def build_arg_parser(parser):
