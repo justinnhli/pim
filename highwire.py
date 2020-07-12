@@ -40,73 +40,82 @@ def scrape_authors(url, html):
     return ''
 
 
-def parse_author(info, url, html):
-    if 'author' not in info:
-        info['author'] = scrape_authors(url, html)
-    if all(',' in author for author in info['author']):
-        return ' and '.join(info['author'])
+def parse_author(highwire, url, html):
+    # pylint: disable = unused-argument
+    if 'author' not in highwire:
+        highwire['author'] = scrape_authors(url, html)
+    if all(',' in author for author in highwire['author']):
+        return ' and '.join(highwire['author'])
     else:
         authors = []
-        for author in info['author']:
+        for author in highwire['author']:
             names = author.split()
             authors.append(names[-1] + ', ' + ' '.join(names[:-1]))
         return ' and '.join(authors)
 
 
-def parse_doi(info, url, html):
-    if 'doi' in info:
-        return info['doi']
+def parse_doi(highwire, url, html):
+    # pylint: disable = unused-argument
+    return highwire.get('doi', None)
 
 
-def parse_journal(info, url, html):
-    if 'journal' in info:
-        return info['journal']
+def parse_journal(highwire, url, html):
+    # pylint: disable = unused-argument
+    return highwire.get('journal', None)
 
 
-def parse_number(info, url, html):
-    if 'number' in info:
-        return info['number']
+def parse_number(highwire, url, html):
+    # pylint: disable = unused-argument
+    for attr in ('number', 'issue'):
+        if attr in highwire:
+            return highwire[attr]
+    return None
 
 
-def parse_pages(info, url, html):
-    if 'firstpage' in info and 'lastpage' in info:
-        first_page = info['firstpage']
-        last_page = info['lastpage']
+def parse_pages(highwire, url, html):
+    # pylint: disable = unused-argument
+    if 'firstpage' in highwire and 'lastpage' in highwire:
+        first_page = highwire['firstpage']
+        last_page = highwire['lastpage']
         if first_page != last_page:
             return f'{first_page}--{last_page}'
+    return None
 
 
-def parse_publisher(info, url, html):
-    if 'publisher' in info:
-        return info['publisher']
+def parse_publisher(highwire, url, html):
+    # pylint: disable = unused-argument
+    return highwire.get('publisher', None)
 
 
-def parse_title(info, url, html):
-    if 'title' in info:
-        return info['title']
+def parse_title(highwire, url, html):
+    # pylint: disable = unused-argument
+    return highwire.get('title', None)
 
 
-def parse_type(info, url, html):
+def parse_type(highwire, url, html):
+    # pylint: disable = unused-argument
     for attr in ['type', 'article_type']:
-        if attr not in info:
+        if attr not in highwire:
             continue
-        if info[attr].lower() == 'jour' or 'article' in info[attr]:
+        if highwire[attr].lower() == 'jour' or 'article' in highwire[attr]:
             return 'article'
     return 'inproceedings' # FIXME
 
 
-def parse_volume(info, url, html):
-    if 'volume' in info:
-        return info['volume']
+def parse_volume(highwire, url, html):
+    # pylint: disable = unused-argument
+    return highwire.get('volume', None)
 
 
-def parse_year(info, url, html):
+def parse_year(highwire, url, html):
+    # pylint: disable = unused-argument
     for attr in ['date', 'publication_date', 'online_date', 'cover_date']:
-        if attr not in info:
+        if attr not in highwire:
             continue
-        match = re.search('[0-9]{4}', info[attr])
+        match = re.search('[0-9]{4}', highwire[attr])
         if match:
             return match.group(0)
+    return None
 
 
 def create_bibtex_id(bibtex):
