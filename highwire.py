@@ -3,11 +3,15 @@
 import re
 from ast import literal_eval
 from collections import defaultdict, namedtuple
+from itertools import chain
+from pathlib import Path
+from subprocess import run
 from textwrap import indent, dedent
 from urllib.parse import urlsplit
 
 import requests
 from bs4 import BeautifulSoup
+from googlesearch import search as google
 
 # look for HighWire Press meta-tags
 # see https://scholar.google.com/intl/en-us/scholar/inclusion.html#indexing
@@ -242,9 +246,47 @@ def do_test():
             print(30 * '-')
 
 
-def do_bibtex(*urls):
-    for url in urls:
+def get_pdf_info(filepath):
+    process = run(['pdfinfo', str(filepath)], capture_output=True, text=True, check=True)
+    info = {}
+    for line in process.stdout.splitlines():
+        key, value = line.split(':', maxsplit=1)
+        info[key.strip().lower()] = value.strip()
+    return info
+
+
+def find_pdf_bibtex(paper_path):
+    pdfinfo = get_pdf_info(paper_path)
+    search_terms = []
+    title = pdfinfo.get('title', '').strip()
+    if title:
+        # TODO filter
+        if title.startswith('doi:'):
+            pass # TODO
+        elif 'microsoft word' in title.lower():
+            pass # TODO
+        search_terms.append(f'"{title}"')
+    author = pdfinfo.get('author', '').strip()
+    if author:
+        authors = author.split(' and ')
+        authors = chain.from_iterable(part.split(',') for part in authors)
+        for author in authors:
+            search_terms.append(f'"{author.strip()}"')
+    for url in google(' '.join(search_terms)):
         bibtex = to_bibtex(url)
+        if bibtex:
+            return bibtex
+    return None
+
+
+def do_bibtex(*args):
+    for arg in args:
+        if arg.startswith('http'):
+            bibtex = to_bibtex(arg)
+        else:
+            path = Path(arg).expanduser().resolve()
+            assert path.exists() and path.suffix == '.pdf'
+            bibtex = find_pdf_bibtex(path)
         print(bibtex)
         print()
 

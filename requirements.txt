@@ -1,4 +1,5 @@
 beautifulsoup4
+google
 newspaper3k
 requests
 git+https://github.com/justinnhli/pdfocr.git#egg=pdfocr
